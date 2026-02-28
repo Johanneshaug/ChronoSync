@@ -3,21 +3,21 @@
 }
 
 :root {
-    --bg-color: #050505;
-    /* Black */
-    --card-bg: rgba(20, 20, 20, 0.7);
-    --primary: #c2a878;
-    /* Tan */
-    --primary-glow: rgba(194, 168, 120, 0.2);
-    --secondary: #e5e7eb;
-    /* Silver */
-    --accent: #c2a878;
-    --text-main: #e5e7eb;
-    --text-dim: #9ca3af;
-    --glass-border: rgba(194, 168, 120, 0.15);
-    --work-hour-bg: linear-gradient(to right, rgba(194, 168, 120, 0.03), rgba(194, 168, 120, 0.01));
-    --sleep-hour-bg: linear-gradient(to right, rgba(229, 231, 235, 0.03), rgba(229, 231, 235, 0.01));
-    /* Dynamic sizing is now handled by flex/grid natively */
+    --bg-color: #0a0a0a;
+    /* 60% Black */
+    --card-bg: rgba(18, 18, 18, 0.8);
+    /* Dark surface #121212 with glass effect */
+    --primary: #d4b483;
+    /* 30% Tan */
+    --primary-glow: rgba(212, 180, 131, 0.15);
+    --secondary: #adb5bd;
+    /* 10% Stainless Steel */
+    --accent: #adb5bd;
+    --text-main: #d4b483;
+    --text-dim: #adb5bd;
+    --glass-border: rgba(212, 180, 131, 0.1);
+    --work-hour-bg: linear-gradient(to right, rgba(212, 180, 131, 0.03), rgba(212, 180, 131, 0.01));
+    --sleep-hour-bg: linear-gradient(to right, rgba(173, 181, 189, 0.03), rgba(173, 181, 189, 0.01));
 }
 
 html,
@@ -32,6 +32,7 @@ body {
 body {
     background-color: var(--bg-color);
     color: var(--text-main);
+    font-family: 'Inter', sans-serif;
     display: flex;
     flex-direction: column;
     background-image:
@@ -65,10 +66,11 @@ header {
 }
 
 header h1 {
+    font-family: 'Outfit', sans-serif;
     font-size: 1.5rem;
-    font-weight: 800;
+    font-weight: 700;
     letter-spacing: -0.04em;
-    background: linear-gradient(180deg, #e5e7eb 0%, #c2a878 100%);
+    background: linear-gradient(135deg, #adb5bd 0%, #d4b483 100%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -130,15 +132,17 @@ select,
 }
 
 .btn-primary {
-    background: var(--text-main);
-    color: #000;
-    border: none;
-    font-weight: 600;
+    background: transparent;
+    color: var(--secondary);
+    border: 1px solid var(--secondary);
+    font-weight: 500;
+    font-family: 'Outfit', sans-serif;
 }
 
 .btn-primary:hover {
-    background: var(--primary);
-    transform: translateY(-1px);
+    background: var(--primary-glow);
+    color: var(--primary);
+    transform: translateY(-2px);
 }
 
 .btn-primary:active {
