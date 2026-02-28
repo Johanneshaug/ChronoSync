@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChronoSync | Interactive Timezone Meeting Planner</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <meta name="description" content="A premium timezone comparison tool for seamless cross-border appointments.">
+</head>
+
+<body>
+    <header>
+        <h1>ChronoSync</h1>
+        <p>Plan your global meetings with surgical precision.</p>
+    </header>
+
+    <main class="app-container">
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="source-tz">My Timezone</label>
+                <select id="source-tz"></select>
+            </div>
+            <div class="control-group">
+                <label for="target-tz">Their Timezone</label>
+                <select id="target-tz"></select>
+            </div>
+            <div class="control-group">
+                <label for="meeting-duration">Duration</label>
+                <select id="meeting-duration">
+                    <option value="30">30 min</option>
+                    <option value="60" selected>1 hour</option>
+                    <option value="90">1.5 hours</option>
+                    <option value="120">2 hours</option>
+                    <option value="180">3 hours</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>&nbsp;</label>
+                <button id="jump-now" class="btn-primary">Jump to Now</button>
+            </div>
+        </div>
+
+        <div class="planner-board">
+            <!-- Headers Row -->
+            <div class="board-header empty"></div>
+            <div class="board-header column-header">
+                <div class="tz-name" id="source-name">Local Time</div>
+                <div class="current-time" id="source-current">00:00</div>
+            </div>
+            <div class="board-header column-header">
+                <div class="tz-name" id="target-name">Remote Time</div>
+                <div class="current-time" id="target-current">00:00</div>
+            </div>
+
+            <!-- Left: Time markers -->
+            <div class="time-markers" id="marker-column">
+                <!-- Hours 0-23 will be injected here -->
+            </div>
+
+            <!-- Middle: Source Timeline -->
+            <div class="timeline-column" id="source-timeline">
+                <div class="grid-layer" id="source-grid">
+                    <!-- 24 hour slots -->
+                </div>
+                <div class="time-indicator" id="source-now-line"></div>
+                <div class="appointment-card" id="main-appointment">
+                    <div class="title">Meeting</div>
+                    <div class="time-range" id="source-range">10:00 - 11:00</div>
+                </div>
+            </div>
+
+            <!-- Right: Target Timeline -->
+            <div class="timeline-column" id="target-timeline">
+                <div class="grid-layer" id="target-grid">
+                    <!-- 24 hour slots -->
+                </div>
+                <div class="time-indicator" id="target-now-line"></div>
+                <div class="reflection-card" id="target-reflection">
+                    <div class="title"></div>
+                    <div class="time-range" id="target-range">14:00 - 15:00</div>
+                </div>
+                <div class="reflection-card" id="target-reflection-wrap" style="display: none;">
+                    <div class="title"></div>
+                    <div class="time-range" id="target-range-wrap"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

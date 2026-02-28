@@ -1,0 +1,383 @@
+* {
+    box-sizing: border-box;
+}
+
+:root {
+    --bg-color: #050505;
+    /* Black */
+    --card-bg: rgba(20, 20, 20, 0.7);
+    --primary: #c2a878;
+    /* Tan */
+    --primary-glow: rgba(194, 168, 120, 0.2);
+    --secondary: #e5e7eb;
+    /* Silver */
+    --accent: #c2a878;
+    --text-main: #e5e7eb;
+    --text-dim: #9ca3af;
+    --glass-border: rgba(194, 168, 120, 0.15);
+    --work-hour-bg: linear-gradient(to right, rgba(194, 168, 120, 0.03), rgba(194, 168, 120, 0.01));
+    --sleep-hour-bg: linear-gradient(to right, rgba(229, 231, 235, 0.03), rgba(229, 231, 235, 0.01));
+    /* Dynamic sizing is now handled by flex/grid natively */
+}
+
+html,
+body {
+    height: 100vh;
+    margin: 0;
+    overflow: hidden;
+    user-select: none;
+    /* Globally prevent text selection during drag */
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    display: flex;
+    flex-direction: column;
+    background-image:
+        radial-gradient(circle at 10% 20%, rgba(194, 168, 120, 0.05) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(229, 231, 235, 0.05) 0%, transparent 40%);
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+
+header {
+    padding: 0.75rem;
+    text-align: center;
+    background: linear-gradient(to bottom, rgba(2, 6, 23, 0.9), transparent);
+    z-index: 10;
+}
+
+header h1 {
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    background: linear-gradient(180deg, #e5e7eb 0%, #c2a878 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 0.1rem;
+}
+
+header p {
+    color: var(--text-dim);
+    font-size: 0.75rem;
+}
+
+.app-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 1.5rem 1.5rem 1.5rem;
+    gap: 0.75rem;
+    flex: 1;
+    overflow: hidden;
+}
+
+.controls {
+    display: flex;
+    gap: 2rem;
+    background: var(--card-bg);
+    padding: 1rem 2rem;
+    border-radius: 1rem;
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.control-group label {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-dim);
+    font-weight: 600;
+}
+
+select,
+.btn-primary {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+    color: var(--text-main);
+    padding: 0.6rem 1.25rem;
+    border-radius: 0.75rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    outline: none;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-primary {
+    background: var(--text-main);
+    color: #000;
+    border: none;
+    font-weight: 600;
+}
+
+.btn-primary:hover {
+    background: var(--primary);
+    transform: translateY(-1px);
+}
+
+.btn-primary:active {
+    transform: translateY(0) scale(0.98);
+}
+
+select:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+select:focus {
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.planner-board {
+    display: grid;
+    grid-template-columns: 60px 1fr 1fr;
+    grid-template-rows: auto 1fr;
+    /* Slimmer markers */
+    gap: 0;
+    width: 100%;
+    max-width: 1200px;
+    background: var(--card-bg);
+    border-radius: 1.5rem;
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(24px);
+    overflow: hidden;
+    position: relative;
+    box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.05),
+        0 20px 50px -12px rgba(0, 0, 0, 0.5);
+    flex: 1;
+    /* Dynamic height */
+    min-height: 0;
+    /* Important for flex child */
+    margin-bottom: 1rem;
+}
+
+/* Time markers column */
+.time-markers {
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--glass-border);
+    background: rgba(20, 20, 20, 0.4);
+    height: 100%;
+    /* Fill grid 1fr row */
+}
+
+.time-marker {
+    flex: 1;
+    /* Squashes evenly into 24 slots */
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 1rem;
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+/* Timeline Columns */
+.timeline-column {
+    position: relative;
+    height: 100%;
+    /* Fill grid 1fr row */
+    border-right: 1px solid var(--glass-border);
+    background: rgba(0, 0, 0, 0.1);
+    z-index: 10;
+}
+
+.timeline-column:last-child {
+    border-right: none;
+}
+
+.board-header {
+    background: #111111;
+    border-bottom: 1px solid var(--glass-border);
+    z-index: 500;
+    position: relative;
+}
+
+.column-header {
+    padding: 0.5rem 1rem;
+    text-align: center;
+}
+
+
+.column-header .tz-name {
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.column-header .current-time {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Time Indicator line */
+.time-indicator {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--primary);
+    z-index: 5;
+    /* Deep background layer */
+    pointer-events: none;
+    box-shadow: 0 0 10px rgba(194, 168, 120, 0.4);
+}
+
+.time-indicator::before {
+    content: '';
+    position: absolute;
+    left: -4px;
+    top: -3px;
+    width: 8px;
+    height: 8px;
+    background: var(--primary);
+    border-radius: 50%;
+}
+
+.grid-layer {
+    position: absolute;
+    inset: 0;
+    /* Fill timeline-column perfectly */
+    display: flex;
+    flex-direction: column;
+}
+
+.hour-slot {
+    flex: 1;
+    /* Squash evenly */
+    min-height: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    position: relative;
+    transition: background 0.3s ease;
+}
+
+.hour-slot:hover {
+    background: var(--primary-glow);
+}
+
+/* THE APPOINTMENT CARD */
+.appointment-card {
+    position: absolute;
+    left: 4px;
+    right: 4px;
+    background: var(--secondary);
+    /* Silver background */
+    color: #000;
+    border-radius: 4px;
+    padding: 0 6px;
+    cursor: grab;
+    z-index: 300;
+    /* On top of lines but under header (500) */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    user-select: none;
+    transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s ease, opacity 0.2s ease;
+    display: flex;
+    flex-direction: row;
+    /* Better for small heights */
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid var(--primary);
+    /* Tan border */
+    overflow: hidden;
+    gap: 4px;
+    line-height: 1;
+}
+
+.appointment-card:active {
+    cursor: grabbing;
+    transform: scale(1.02) translateY(-2px);
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
+}
+
+.appointment-card .title {
+    font-weight: 800;
+    font-size: 0.55rem;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.appointment-card .time-range {
+    font-size: 0.55rem;
+    font-weight: 800;
+    /* Extra bold for small text */
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    color: rgba(0, 0, 0, 0.8);
+}
+
+/* Reflection card (the one in the second column) */
+.reflection-card {
+    position: absolute;
+    left: 4px;
+    right: 4px;
+    background: rgba(229, 231, 235, 0.05);
+    /* Tint of silver */
+    border: 1px dashed var(--primary);
+    /* Tan dashed border */
+    border-radius: 4px;
+    padding: 0 6px;
+    z-index: 250;
+    pointer-events: none;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    backdrop-filter: blur(8px);
+    overflow: hidden;
+    gap: 4px;
+    line-height: 1;
+}
+
+.reflection-card::after {
+    display: none;
+    /* Removing the extra pseudo border since the main card has a dashed border now */
+}
+
+.reflection-card .time-range {
+    color: var(--secondary);
+    font-weight: 800;
+    font-size: 0.55rem;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+/* Interactive helper */
+.drag-handle {
+    position: absolute;
+    bottom: 5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 30px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+}
