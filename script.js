@@ -20,6 +20,15 @@ const targetTimeDisplay = document.getElementById('target-current');
 
 function init() {
     populateTimezones();
+
+    makeCustomSelect('source-tz', true);
+    makeCustomSelect('target-tz', true);
+    makeCustomSelect('meeting-duration', false);
+
+    document.addEventListener('click', () => {
+        document.querySelectorAll('.custom-select.open').forEach(c => c.classList.remove('open'));
+    });
+
     generateGrid();
     refreshHeights();
     setupDragging();
@@ -73,6 +82,107 @@ function populateTimezones() {
         targetTzSelect.add(option2);
     });
 }
+
+function makeCustomSelect(selectId, hasSearch) {
+    const originalSelect = document.getElementById(selectId);
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'custom-select';
+
+    const trigger = document.createElement('div');
+    trigger.className = 'select-trigger';
+
+    const valueSpan = document.createElement('span');
+    valueSpan.className = 'select-value';
+    const selectedOpt = originalSelect.options[originalSelect.selectedIndex];
+    valueSpan.textContent = selectedOpt ? selectedOpt.textContent : '';
+
+    const arrow = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    arrow.setAttribute('fill', 'currentColor');
+    arrow.setAttribute('height', '16');
+    arrow.setAttribute('width', '16');
+    arrow.setAttribute('viewBox', '0 0 24 24');
+    arrow.innerHTML = '<path d="M7 10l5 5 5-5z"/>';
+
+    trigger.appendChild(valueSpan);
+    trigger.appendChild(arrow);
+
+    const dropdown = document.createElement('div');
+    dropdown.className = 'select-dropdown';
+
+    let searchInput = null;
+    if (hasSearch) {
+        searchInput = document.createElement('input');
+        searchInput.type = 'text';
+        searchInput.className = 'select-search';
+        searchInput.placeholder = 'Search timezone...';
+        dropdown.appendChild(searchInput);
+    }
+
+    const optionsList = document.createElement('ul');
+    optionsList.className = 'select-options';
+
+    function renderOptions(filter = '') {
+        optionsList.innerHTML = '';
+        const lowerFilter = filter.toLowerCase();
+        Array.from(originalSelect.options).forEach(opt => {
+            if (opt.textContent.toLowerCase().includes(lowerFilter)) {
+                const li = document.createElement('li');
+                li.className = 'select-option' + (opt.selected ? ' selected' : '');
+                li.textContent = opt.textContent;
+                li.dataset.value = opt.value;
+                li.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    originalSelect.value = opt.value;
+                    valueSpan.textContent = opt.textContent;
+                    wrapper.classList.remove('open');
+                    originalSelect.dispatchEvent(new Event('change'));
+
+                    Array.from(optionsList.children).forEach(c => c.classList.remove('selected'));
+                    li.classList.add('selected');
+                });
+                optionsList.appendChild(li);
+            }
+        });
+    }
+
+    renderOptions();
+    dropdown.appendChild(optionsList);
+
+    wrapper.appendChild(trigger);
+    wrapper.appendChild(dropdown);
+
+    originalSelect.parentNode.insertBefore(wrapper, originalSelect.nextSibling);
+
+    trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = wrapper.classList.contains('open');
+        document.querySelectorAll('.custom-select.open').forEach(c => c.classList.remove('open'));
+        if (!isOpen) {
+            wrapper.classList.add('open');
+            if (searchInput) {
+                searchInput.value = '';
+                renderOptions('');
+                searchInput.focus();
+            }
+
+            setTimeout(() => {
+                const selectedLi = optionsList.querySelector('.selected');
+                if (selectedLi) {
+                    optionsList.scrollTop = selectedLi.offsetTop - optionsList.offsetTop - 100;
+                }
+            }, 10);
+        }
+    });
+
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            renderOptions(e.target.value);
+        });
+        searchInput.addEventListener('click', e => e.stopPropagation());
+    }
+}
+
 
 function generateGrid() {
     const markerCol = document.getElementById('marker-column');

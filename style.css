@@ -117,8 +117,14 @@ header p {
     font-weight: 600;
 }
 
-select,
-.btn-primary {
+/* Hidden Native Select */
+select {
+    display: none;
+}
+
+/* Base button and custom select trigger share styling */
+.btn-primary,
+.select-trigger {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid var(--glass-border);
     color: var(--text-main);
@@ -139,22 +145,97 @@ select,
     font-family: 'Outfit', sans-serif;
 }
 
-.btn-primary:hover {
+.btn-primary:hover,
+.select-trigger:hover {
     background: var(--primary-glow);
     color: var(--primary);
     transform: translateY(-2px);
 }
 
-.btn-primary:active {
+.btn-primary:active,
+.select-trigger:active {
     transform: translateY(0) scale(0.98);
 }
 
-select:hover {
-    background: rgba(255, 255, 255, 0.08);
+/* Custom Select Dropdown UI */
+.custom-select {
+    position: relative;
+    width: 200px;
 }
 
-select:focus {
-    border-color: rgba(255, 255, 255, 0.3);
+.select-trigger {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.select-trigger svg {
+    transition: transform 0.2s;
+}
+
+.custom-select.open .select-trigger svg {
+    transform: rotate(180deg);
+}
+
+.select-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    width: 100%;
+    background: var(--bg-color);
+    border: 1px solid var(--glass-border);
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+    display: flex;
+    flex-direction: column;
+    z-index: 2000;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-5px);
+    transition: all 0.2s ease;
+}
+
+.custom-select.open .select-dropdown {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+
+.select-search {
+    background: rgba(255, 255, 255, 0.02);
+    border: none;
+    border-bottom: 1px solid var(--glass-border);
+    color: var(--text-main);
+    padding: 0.8rem 1rem;
+    font-family: inherit;
+    font-size: 0.85rem;
+    outline: none;
+    width: 100%;
+    border-radius: 0.75rem 0.75rem 0 0;
+}
+
+.select-options {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.select-option {
+    padding: 0.6rem 1rem;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    transition: background 0.1s;
+}
+
+.select-option:hover,
+.select-option.selected {
+    background: var(--primary-glow);
+    color: var(--text-main);
 }
 
 .planner-board {
