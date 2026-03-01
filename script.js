@@ -1,6 +1,8 @@
 let currentApptMin = 600; // start at 10:00 AM
 let currentDuration = 60; // 1 hour
 let HOUR_HEIGHT = 20; // baseline
+let extraColumns = []; // { id, tz, selectEl, headerEl, nowLineEl, card1El, card2El }
+let extraColCounter = 0;
 
 const TOTAL_MINUTES = 24 * 60;
 
@@ -10,7 +12,9 @@ const durationSelect = document.getElementById('meeting-duration');
 const mainAppt = document.getElementById('main-appointment');
 const targetReflection = document.getElementById('target-reflection');
 const targetReflectionWrap = document.getElementById('target-reflection-wrap');
+const mainApptWrap = document.getElementById('main-appointment-wrap');
 const sourceRangeTxt = document.getElementById('source-range');
+const sourceRangeWrapTxt = document.getElementById('source-range-wrap');
 const targetRangeTxt = document.getElementById('target-range');
 const targetRangeWrapTxt = document.getElementById('target-range-wrap');
 const sourceTimeDisplay = document.getElementById('source-current');
@@ -55,6 +59,8 @@ function init() {
         currentApptMin = Math.round(((t.h * 60) + t.m) / 15) * 15;
         syncUI();
     });
+
+    document.getElementById('add-timezone').addEventListener('click', addExtraTimezone);
 
     window.addEventListener('resize', () => {
         refreshHeights();
@@ -149,6 +155,7 @@ function makeCustomSelect(selectId, hasSearch) {
     renderOptions();
     dropdown.appendChild(optionsList);
 
+
     wrapper.appendChild(trigger);
     wrapper.appendChild(dropdown);
 
@@ -205,6 +212,225 @@ function generateGrid() {
             grid.appendChild(slot);
         });
     }
+}
+
+// --- EXTRA TIMEZONE COLUMNS ---
+
+function updateGridColumns() {
+    const board = document.querySelector('.planner-board');
+    const numCols = 2 + extraColumns.length; // source + extras
+    const colDef = '60px ' + Array(numCols).fill('1fr').join(' ');
+    board.style.gridTemplateColumns = colDef;
+}
+
+function addExtraTimezone() {
+    extraColCounter++;
+    const id = extraColCounter;
+    const board = document.querySelector('.planner-board');
+    const timezones = Intl.supportedValuesOf('timeZone');
+    const defaultTz = timezones[Math.floor(Math.random() * timezones.length)];
+
+    // --- Controls: add a new select in the controls bar ---
+    const controls = document.querySelector('.controls');
+    const addBtn = document.getElementById('add-timezone').parentElement;
+
+    const ctrlGroup = document.createElement('div');
+    ctrlGroup.className = 'control-group';
+    ctrlGroup.dataset.extraId = id;
+
+    // Label row with inline × remove button
+    const lblRow = document.createElement('div');
+    lblRow.style.display = 'flex';
+    lblRow.style.alignItems = 'center';
+    lblRow.style.justifyContent = 'space-between';
+    lblRow.style.gap = '4px';
+
+    const lbl = document.createElement('label');
+    lbl.textContent = `Timezone ${2 + extraColumns.length}`;
+    lbl.style.margin = '0';
+
+    const removeCtrlBtn = document.createElement('button');
+    removeCtrlBtn.textContent = '×';
+    removeCtrlBtn.title = 'Remove this timezone';
+    removeCtrlBtn.style.cssText = `
+        background: none; border: none; color: var(--text-dim);
+        cursor: pointer; font-size: 0.9rem; line-height: 1;
+        padding: 0; opacity: 0.6; transition: opacity 0.2s;
+    `;
+    removeCtrlBtn.addEventListener('mouseover', () => removeCtrlBtn.style.opacity = '1');
+    removeCtrlBtn.addEventListener('mouseout', () => removeCtrlBtn.style.opacity = '0.6');
+    removeCtrlBtn.addEventListener('click', () => removeExtraTimezone(id));
+
+    lblRow.appendChild(lbl);
+    lblRow.appendChild(removeCtrlBtn);
+
+    const sel = document.createElement('select');
+    sel.id = `extra-tz-${id}`;
+    timezones.forEach(tz => {
+        const name = tz.split('/').pop().replace(/_/g, ' ');
+        const opt = new Option(name, tz, tz === defaultTz, tz === defaultTz);
+        sel.add(opt);
+    });
+
+    ctrlGroup.appendChild(lblRow);
+    ctrlGroup.appendChild(sel);
+
+    // Insert right after "Their Timezone" (before Duration group)
+    const durationGroup = document.getElementById('meeting-duration').parentElement;
+    controls.insertBefore(ctrlGroup, durationGroup);
+
+    makeCustomSelect(`extra-tz-${id}`, true);
+    sel.addEventListener('change', syncUI);
+
+    // --- Board: Header ---
+    const header = document.createElement('div');
+    header.className = 'board-header column-header';
+    header.dataset.extraId = id;
+    header.style.position = 'relative';
+
+    const tzName = document.createElement('div');
+    tzName.className = 'tz-name';
+    tzName.id = `extra-name-${id}`;
+    tzName.textContent = defaultTz.split('/').pop().replace(/_/g, ' ');
+
+    const timeTxt = document.createElement('div');
+    timeTxt.className = 'current-time';
+    timeTxt.id = `extra-current-${id}`;
+    timeTxt.textContent = '00:00';
+
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'remove-col-btn';
+    removeBtn.textContent = '×';
+    removeBtn.addEventListener('click', () => removeExtraTimezone(id));
+
+    header.appendChild(tzName);
+    header.appendChild(timeTxt);
+    header.appendChild(removeBtn);
+
+    // Insert header after the last column header
+    const headers = board.querySelectorAll('.board-header');
+    headers[headers.length - 1].after(header);
+
+    // --- Board: Timeline column ---
+    const col = document.createElement('div');
+    col.className = 'timeline-column';
+    col.dataset.extraId = id;
+
+    const grid = document.createElement('div');
+    grid.className = 'grid-layer';
+    for (let i = 0; i < 24; i++) {
+        const slot = document.createElement('div');
+        slot.className = 'hour-slot';
+        grid.appendChild(slot);
+    }
+
+    const nowLine = document.createElement('div');
+    nowLine.className = 'time-indicator';
+    nowLine.id = `extra-now-${id}`;
+
+    const card1 = document.createElement('div');
+    card1.className = 'reflection-card';
+    card1.id = `extra-card-${id}`;
+    const card1Range = document.createElement('div');
+    card1Range.className = 'time-range';
+    card1Range.id = `extra-range-${id}`;
+    card1.appendChild(document.createElement('div')).className = 'title';
+    card1.appendChild(card1Range);
+
+    const card2 = document.createElement('div');
+    card2.className = 'reflection-card';
+    card2.style.display = 'none';
+    const card2Range = document.createElement('div');
+    card2Range.className = 'time-range';
+    card2Range.id = `extra-range-wrap-${id}`;
+    card2.appendChild(document.createElement('div')).className = 'title';
+    card2.appendChild(card2Range);
+
+    col.appendChild(grid);
+    col.appendChild(nowLine);
+    col.appendChild(card1);
+    col.appendChild(card2);
+
+    // Insert timeline col after last timeline column
+    const timelines = board.querySelectorAll('.timeline-column');
+    timelines[timelines.length - 1].after(col);
+
+    extraColumns.push({ id, selectEl: sel, headerEl: header, nowLineEl: nowLine, card1El: card1, card2El: card2 });
+    updateGridColumns();
+    syncUI();
+}
+
+function removeExtraTimezone(id) {
+    const board = document.querySelector('.planner-board');
+    const controls = document.querySelector('.controls');
+
+    // Remove header and timeline from board
+    board.querySelector(`.board-header[data-extra-id="${id}"]`)?.remove();
+    board.querySelector(`.timeline-column[data-extra-id="${id}"]`)?.remove();
+
+    // Remove control group
+    controls.querySelector(`.control-group[data-extra-id="${id}"]`)?.remove();
+
+    extraColumns = extraColumns.filter(c => c.id !== id);
+    updateGridColumns();
+    syncUI();
+}
+
+function syncExtraColumns() {
+    const now = new Date();
+    const sourceTz = sourceTzSelect.value;
+
+    extraColumns.forEach(col => {
+        const tz = col.selectEl.value;
+        const time = getTimeInTz(now, tz);
+        const nowMin = (time.h * 60) + time.m;
+
+        // Header
+        document.getElementById(`extra-name-${col.id}`).textContent = tz.split('/').pop().replace(/_/g, ' ');
+        document.getElementById(`extra-current-${col.id}`).textContent =
+            `${time.h.toString().padStart(2, '0')}:${time.m.toString().padStart(2, '0')}`;
+
+        // Now line
+        col.nowLineEl.style.top = `${(nowMin / 60) * HOUR_HEIGHT}px`;
+        col.nowLineEl.style.display = apptOverlapsMinute(nowMin, apptMin, currentDuration) ? 'none' : '';
+
+        // Appointment reflection
+        const diff = getOffsetDiff(now, sourceTz, tz);
+        let apptMin = currentApptMin + diff;
+        let dayStatus = '';
+        if (apptMin >= TOTAL_MINUTES) { dayStatus = ' (+1d)'; apptMin %= TOTAL_MINUTES; }
+        else if (apptMin < 0) { dayStatus = ' (-1d)'; apptMin = (apptMin + TOTAL_MINUTES) % TOTAL_MINUTES; }
+
+        const sH = Math.floor(apptMin / 60);
+        const sM = apptMin % 60;
+        const rangeTxt = document.getElementById(`extra-range-${col.id}`);
+        const rangeWrapTxt = document.getElementById(`extra-range-wrap-${col.id}`);
+
+        if (apptMin + currentDuration > TOTAL_MINUTES) {
+            const d1 = TOTAL_MINUTES - apptMin;
+            const d2 = currentDuration - d1;
+
+            col.card1El.style.top = `${(apptMin / 60) * HOUR_HEIGHT}px`;
+            col.card1El.style.height = `${(d1 / 60) * HOUR_HEIGHT}px`;
+            rangeTxt.textContent = `${formatTime(sH, sM)} - 00:00`;
+
+            col.card2El.style.display = 'flex';
+            col.card2El.style.top = '0px';
+            col.card2El.style.height = `${(d2 / 60) * HOUR_HEIGHT}px`;
+            rangeWrapTxt.style.display = 'none'; // timespan only in lower part when split
+            rangeWrapTxt.textContent = `00:00 - ${formatTime(Math.floor(d2 / 60), d2 % 60)}`;
+        } else {
+            col.card2El.style.display = 'none';
+            rangeWrapTxt.style.display = '';
+            const eTotal = apptMin + currentDuration;
+            const eH = Math.floor((eTotal % TOTAL_MINUTES) / 60);
+            const eM = eTotal % 60;
+
+            col.card1El.style.top = `${(apptMin / 60) * HOUR_HEIGHT}px`;
+            col.card1El.style.height = `${(currentDuration / 60) * HOUR_HEIGHT}px`;
+            rangeTxt.textContent = `${formatTime(sH, sM)} - ${formatTime(eH, eM)}${dayStatus}`;
+        }
+    });
 }
 
 // --- CORE LOGIC ---
@@ -266,13 +492,36 @@ function syncUI() {
     // Update Source Appointment
     const startH = Math.floor(currentApptMin / 60);
     const startM = currentApptMin % 60;
-    const endTotal = currentApptMin + currentDuration;
-    const endH = Math.floor((endTotal % TOTAL_MINUTES) / 60);
-    const endM = endTotal % 60;
 
-    mainAppt.style.top = `${(currentApptMin / 60) * HOUR_HEIGHT}px`;
-    mainAppt.style.height = `${(currentDuration / 60) * HOUR_HEIGHT}px`;
-    sourceRangeTxt.textContent = `${formatTime(startH, startM)} - ${formatTime(endH, endM)}`;
+    if (currentApptMin + currentDuration > TOTAL_MINUTES) {
+        const d1 = TOTAL_MINUTES - currentApptMin;
+        const d2 = currentDuration - d1;
+
+        mainAppt.style.top = `${(currentApptMin / 60) * HOUR_HEIGHT}px`;
+        mainAppt.style.height = `${(d1 / 60) * HOUR_HEIGHT}px`;
+        sourceRangeTxt.textContent = `${formatTime(startH, startM)} - 00:00`;
+
+        mainApptWrap.style.display = 'flex';
+        mainApptWrap.style.top = `0px`;
+        mainApptWrap.style.height = `${(d2 / 60) * HOUR_HEIGHT}px`;
+        sourceRangeWrapTxt.style.display = 'none'; // timespan only in lower part when split
+
+        const endH = Math.floor(d2 / 60);
+        const endM = d2 % 60;
+        sourceRangeWrapTxt.textContent = `00:00 - ${formatTime(endH, endM)}`;
+    } else {
+        mainApptWrap.style.display = 'none';
+        sourceRangeWrapTxt.style.display = '';
+
+        const endTotal = currentApptMin + currentDuration;
+        const endH = Math.floor((endTotal % TOTAL_MINUTES) / 60);
+        const endM = endTotal % 60;
+
+        mainAppt.style.top = `${(currentApptMin / 60) * HOUR_HEIGHT}px`;
+        mainAppt.style.height = `${(currentDuration / 60) * HOUR_HEIGHT}px`;
+        let wrapLabel = (endTotal === TOTAL_MINUTES) ? '00:00' : formatTime(endH, endM);
+        sourceRangeTxt.textContent = `${formatTime(startH, startM)} - ${wrapLabel}`;
+    }
 
     // Update Target Reflection
     let targetApptMin = currentApptMin + diff;
@@ -305,6 +554,7 @@ function syncUI() {
         targetReflectionWrap.style.display = 'flex';
         targetReflectionWrap.style.top = `0px`;
         targetReflectionWrap.style.height = `${(duration2 / 60) * HOUR_HEIGHT}px`;
+        targetRangeWrapTxt.style.display = 'none'; // timespan only in lower part when split
 
         let endMinRaw = currentApptMin + diff + currentDuration;
         let endDayStatus = "";
@@ -319,6 +569,7 @@ function syncUI() {
     } else {
         // Normal block
         targetReflectionWrap.style.display = 'none';
+        targetRangeWrapTxt.style.display = '';
 
         const tEndTotal = targetApptMin + currentDuration;
         const tEndH = Math.floor((tEndTotal % TOTAL_MINUTES) / 60);
@@ -335,10 +586,31 @@ function syncUI() {
     // Labels
     document.getElementById('source-name').textContent = sourceTz.split('/').pop().replace(/_/g, ' ');
     document.getElementById('target-name').textContent = targetTz.split('/').pop().replace(/_/g, ' ');
+
+    // Hide now-lines when they touch the appointment box
+    document.getElementById('source-now-line').style.display =
+        apptOverlapsMinute(sNowMin, currentApptMin, currentDuration) ? 'none' : '';
+    document.getElementById('target-now-line').style.display =
+        apptOverlapsMinute(tNowMin, targetApptMin, currentDuration) ? 'none' : '';
+
+    syncExtraColumns();
 }
 
 function formatTime(h, m) {
     return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+}
+
+// Returns true if nowMin (0-1439) falls inside the appointment span
+function apptOverlapsMinute(nowMin, apptStart, duration) {
+    const apptEnd = apptStart + duration;
+    if (apptEnd <= TOTAL_MINUTES) {
+        // Normal (non-wrapping) block
+        return nowMin >= apptStart && nowMin <= apptEnd;
+    } else {
+        // Block wraps past midnight
+        const wrappedEnd = apptEnd % TOTAL_MINUTES;
+        return nowMin >= apptStart || nowMin <= wrappedEnd;
+    }
 }
 
 // --- INTERACTION ---
@@ -348,15 +620,19 @@ function setupDragging() {
     let startY = 0;
     let startMinY = 0;
 
-    mainAppt.addEventListener('mousedown', (e) => {
+    const handleDragStart = (e) => {
         isDragging = true;
         startY = e.clientY;
         startMinY = currentApptMin;
         mainAppt.style.transition = 'transform 0.05s ease-out';
+        if (mainApptWrap) mainApptWrap.style.transition = 'transform 0.05s ease-out';
         targetReflection.style.transition = 'none';
         targetReflectionWrap.style.transition = 'none';
         document.body.style.cursor = 'grabbing';
-    });
+    };
+
+    mainAppt.addEventListener('mousedown', handleDragStart);
+    if (mainApptWrap) mainApptWrap.addEventListener('mousedown', handleDragStart);
 
     window.addEventListener('mousemove', (e) => {
         if (!isDragging) return;
@@ -367,7 +643,7 @@ function setupDragging() {
         let newMin = Math.round((startMinY + deltaMin) / 15) * 15;
 
         // Robust boundaries
-        const maxStartMin = TOTAL_MINUTES - currentDuration;
+        const maxStartMin = TOTAL_MINUTES - 15; // Allow scheduling up to 23:45
         if (newMin < 0) newMin = 0;
         if (newMin > maxStartMin) newMin = maxStartMin;
 
